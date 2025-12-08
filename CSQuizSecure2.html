@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Prep - Secure Version</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+            z-index: 1;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .category-card {
+            background: #f0f4f8;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            border: 2px solid #ccc; 
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: 600;
+        }
+
+        .category-card:hover {
+            background: #e0e7ff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .category-card.selected {
+            border-color: #4CAF50;
+            background: #d4edda;
+            color: #155724;
+            box-shadow: 0 6px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .settings-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .progress-actions {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+        
+        .progress-actions > div {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .progress-actions .button {
+            white-space: nowrap;
+        }
+        
+        .settings-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input[type="number"], select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        
+        .question-card {
+            background: #f9f9f9;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .question-text {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .answer-option {
+            background: #e0e7ff;
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            border: 2px solid transparent;
+            font-weight: 500;
+        }
+
+        .answer-option:hover:not(.disabled) {
+            background: #c3d4ff;
+        }
+
+        .answer-option.correct {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #388E3C;
+        }
+
+        .answer-option.incorrect {
+            background-color: #F44336;
+            color: white;
+            border-color: #D32F2F;
+        }
+
+        .answer-option.disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .quiz-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .quiz-status {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4a5dcb;
+        }
+
+        .ai-help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 99999;
+            overflow-y: auto;
+        }
+
+        .ai-help-modal.show {
+            display: block;
+        }
+
+        .ai-help-content {
+            max-width: 700px;
+            margin: 50px auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .ai-help-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ccc;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+
+        .ai-help-close:hover {
+            background: #bbb;
+        }
+
+        .ai-help-header {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .ai-help-body {
+            color: #333;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        
+        /* Markdown content styling */
+        .ai-help-body p { margin-bottom: 10px; }
+        .ai-help-body strong { color: #667eea; }
+        .ai-help-body ul { margin-left: 20px; margin-bottom: 10px; }
+
+        .button-help {
+            background: #FF9800;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .button-help:hover:not(:disabled) {
+            background: #F57C00;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .button-help:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .button-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: #5a6cdb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+        }
+
+        .button-secondary {
+            background: #ccc;
+            color: #333;
+        }
+        
+        .button-secondary:hover {
+            background: #bbb;
+        }
+
+        .results-summary {
+            text-align: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+
+        .score {
+            font-size: 3rem;
+            color: #4CAF50;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .percentage {
+            font-size: 1.5rem;
+            color: #764ba2;
+            margin-top: 5px;
+        }
+
+        .chart-container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .topic-bar-group {
+            margin-bottom: 25px;
+        }
+
+        .topic-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .chart-bar {
+            background: #f1f1f1;
+            height: 30px;
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            font-weight: 500;
+        }
+
+        .bar-fill {
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: width 1s ease-out;
+            border-radius: 4px;
+            z-index: 1;
+        }
+        
+        .bg-red { background: linear-gradient(90deg, #f44336 0%, #ff7961 100%); }
+        .bg-yellow { background: linear-gradient(90deg, #ffc107 0%, #ffeb3b 100%); }
+        .bg-green { background: linear-gradient(90deg, #4CAF50 0%, #81c784 100%); }
+        .bg-blue { background: linear-gradient(90deg, #2196F3 0%, #64b5f6 100%); }
+
+        .chart-percentage {
+            position: relative;
+            z-index: 2;
+            color: white;
+            font-weight: 700;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+            margin-left: auto;
+        }
+        
+        .feedback-box {
+            background: #e0e7ff;
+            border: 1px solid #667eea;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: #4a5dcb;
+            font-weight: 600;
+        }
+
+        .ai-feedback-text {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .wrong-answer-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+
+        .wrong-answer-question {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .wrong-answer-detail {
+            font-size: 0.95rem;
+            margin-left: 10px;
+        }
+
+        .wrong-answer-detail.your-answer {
+            color: #F44336;
+        }
+        
+        .wrong-answer-detail.correct-answer {
+            color: #4CAF50;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-code-box {
+            background: #f0f4f8;
+            border: 2px solid #667eea;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .progress-code-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .progress-code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+
+        .code-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        #overallPerformanceModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 99999 !important;
+            overflow-y: auto;
+            pointer-events: all;
+        }
+        
+        #overallPerformanceModal.show {
+            display: block !important;
+            pointer-events: all !important;
+        }
+    </style>
+</head>
+<body onload="initCategories()">
+    <div class="container">
+        <h1>CS Multiple-Choice Exam Generator</h1>
+
+        <div id="categorySection" class="section active">
+            <h2>1. Select Categories</h2>
+            <p>Choose the topics you want to be tested on. You must select at least one.</p>
+            <div id="categoryGrid" class="grid">
+                </div>
+            
+            <div class="settings-group" style="margin-top: 20px;">
+                <div class="progress-actions">
+                    <div>
+                        <label for="progressCodeInput">Load Previous Progress (Optional):</label>
+                        <input type="text" id="progressCodeInput" placeholder="Paste your progress code here">
+                        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                            <button class="button button-secondary" onclick="loadProgressCode()">Load Progress</button>
+                            <button class="button button-secondary" onclick="showOverallPerformance()">View Overall Performance</button>
+                        </div>
+                    </div>
+                    <button class="button button-primary" onclick="showSection('settingsSection')" id="nextToSettingsBtn" disabled>Next: Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="settingsSection" class="section">
+            <h2>2. Configure Quiz</h2>
+            
+            <div class="settings-group">
+                <label for="questionsPerCategory">Questions per Category (Min 1, Max 25):</label>
+                <input type="number" id="questionsPerCategory" value="10" min="1" max="25">
+            </div>
+
+            <div class="settings-group">
+                <label for="questionOrder">Question Order:</label>
+                <select id="questionOrder">
+                    <option value="random">Randomised</option>
+                    <option value="category">By Category</option>
+                </select>
+            </div>
+            
+            <div class="settings-group">
+                <label for="questionFilter">Question Filter:</label>
+                <select id="questionFilter">
+                    <option value="all">All Questions</option>
+                    <option value="unanswered">Unanswered Questions Only</option>
+                    <option value="incorrect">Incorrectly Answered Only</option>
+                    <option value="review">Unanswered or Incorrect</option>
+                </select>
+                <p style="font-size: 0.9rem; color: #666; margin-top: 8px;">Note: Filter only applies if progress data has been loaded</p>
+            </div>
+            
+            <button class="button button-secondary" onclick="showSection('categorySection')">Back</button>
+            <button class="button button-primary" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div id="quizSection" class="section">
+            <div id="quizContent">
+                <div class="question-card">
+                    <div id="categoryLabel" class="quiz-status" style="margin-bottom: 15px;"></div>
+                    <div id="questionText" class="question-text"></div>
+                    <div id="optionsGrid" class="options-grid"></div>
+                </div>
+            </div>
+            
+            <div class="quiz-footer">
+                <div id="quizStatus" class="quiz-status"></div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="tipButton" class="button-help" onclick="showAITip()">💡 Tip</button>
+                    <button id="nextQuestionBtn" class="button button-primary" onclick="nextQuestion()" disabled>Next Question</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultsSection" class="section">
+            <h2>3. Quiz Results</h2>
+            
+            <div id="resultsSummary" class="results-summary">
+                <div id="finalScore" class="score"></div>
+                <div id="finalPercentage" class="percentage"></div>
+            </div>
+
+            <div id="feedbackContainer">
+                <div class="feedback-header">
+                    <div>Personalised Feedback</div>
+                    <button class="button button-secondary" id="readFeedbackBtn" onclick="toggleReadFeedback()" disabled>
+                        <span id="ttsIcon">🔊 Read Aloud</span>
+                    </button>
+                </div>
+                <div id="aiFeedback" class="feedback-box">
+                    <div class="loading-spinner"></div>
+                    <div style="margin-top: 15px;">Generating personalised feedback...</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <h3>Performance by Topic</h3>
+                <div id="performanceChart"></div>
+            </div>
+
+            <div id="wrongAnswersContainer" style="display: none; margin-top: 30px;">
+                <h3>Detailed Review of Incorrect Answers</h3>
+                <div id="wrongAnswersList"></div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap;">
+                <button class="button button-secondary" onclick="showWrongAnswers()">Review Incorrect Answers</button>
+                <button class="button button-secondary" onclick="showOverallPerformance()">View Overall Performance</button>
+                <button class="button button-secondary" onclick="repeatQuiz()">Repeat This Quiz</button>
+                <button class="button button-primary" onclick="restart()">Start New Quiz</button>
+            </div>
+            
+            <div class="progress-code-box">
+                <h3>Your Progress Code</h3>
+                <p>Save this code to track your progress across multiple quiz attempts:</p>
+                <div class="progress-code" id="progressCodeDisplay"></div>
+                <div class="code-actions">
+                    <button class="button button-secondary" onclick="copyProgressCode()">Copy Code</button>
+                    <button class="button button-secondary" onclick="downloadProgressCode()">Download Code</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="aiHelpModal" class="ai-help-modal" onclick="closeAIHelpModal(event)">
+        <div class="ai-help-content">
+            <button class="ai-help-close" onclick="closeAIHelpModal()">×</button>
+            <h2 id="aiHelpHeader" class="ai-help-header"></h2>
+            <div id="aiHelpBody" class="ai-help-body">
+                <div class="loading-spinner"></div>
+                <div style="margin-top: 15px; text-align: center;">Generating help...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- SECURE PROXY CONFIGURATION ---
+        // Ensure you have a Vercel/Serverless function handling this endpoint.
+        // It should accept a POST body with { contents, systemInstruction } 
+        // and return the Google Gemini JSON response.
+        const PROXY_URL = '/api/generate'; 
+
+        // --- QUIZ DATA ---
+        const quizData = {
+            '3.1 Fundamentals of algorithms': [
+                { question: "What is an algorithm?", answers: ["A computer program", "A step-by-step procedure to solve a problem", "A type of hardware designed to solve complex problems", "A user interface"], correctAnswer: 1 },
+                { question: "A computer program is:", answers: ["Always the same as an algorithm", "An implementation of an algorithm", "Unrelated to algorithms", "A flowchart"], correctAnswer: 1 },
+                { question: "Which of the following best describes decomposition?", answers: ["Breaking a problem into smaller parts", "Removing unnecessary code", "Optimising a program", "Combining simple steps"], correctAnswer: 0 },
+                { question: "What is abstraction in programming?", answers: ["Hiding unnecessary details and showing only essential features", "Using variables and declaring them with appropriate data types in a program", "Converting a high-level language source code to machine language for execution", "Writing detailed documentation and comments for every line of code"], correctAnswer: 0 }
+            ]
+            // Add more categories and questions here...
+        };
+
+        // --- QUESTION ID GENERATION ---
+        let questionIdMap = {};
+        let idCounter = 0;
+
+        function initialiseQuestionIds() {
+            for (const category in quizData) {
+                quizData[category].forEach(question => {
+                    if (!question.id) {
+                        question.id = idCounter++;
+                        questionIdMap[question.id] = {
+                            category: category,
+                            question: question.question
+                        };
+                    }
+                });
+            }
+        }
+
+        // --- PROGRESS TRACKING (IN-MEMORY) ---
+        let progressData = {};
+
+        function updateQuestionProgress(questionId, isCorrect) {
+            const currentStatus = progressData[questionId] || 0;
+            
+            if (isCorrect) {
+                if (currentStatus === 0 || currentStatus === -1) {
+                    progressData[questionId] = 1; // Correct once
+                } else if (currentStatus === 1) {
+                    progressData[questionId] = 2; // Correct twice (mastered)
+                }
+            } else {
+                progressData[questionId] = -1; // Incorrect
+            }
+        }
+
+        // --- ENCODING/DECODING (XOR Encryption for Save Codes) ---
+        function generateSalt() {
+            const salt = new Uint8Array(4);
+            for (let i = 0; i < 4; i++) salt[i] = Math.floor(Math.random() * 256);
+            return salt;
+        }
+
+        function xorEncrypt(data, salt) {
+            const result = new Uint8Array(data.length);
+            for (let i = 0; i < data.length; i++) {
+                result[i] = data[i] ^ salt[i % salt.length];
+            }
+            return result;
+        }
+
+        function encodeProgress() {
+            const totalQuestions = Object.keys(questionIdMap).length;
+            const numBytes = Math.ceil(totalQuestions / 4);
+            const dataArray = new Uint8Array(numBytes);
+            
+            for (let i = 0; i < totalQuestions; i++) {
+                const status = progressData[i] || 0;
+                const mapped = status === -1 ? 1 : status === 1 ? 2 : status === 2 ? 3 : 0;
+                
+                const byteIndex = Math.floor(i / 4);
+                const bitOffset = (i % 4) * 2;
+                dataArray[byteIndex] |= (mapped << bitOffset);
+            }
+            
+            const salt = generateSalt();
+            const encrypted = xorEncrypt(dataArray, salt);
+            
+            const combined = new Uint8Array(salt.length + encrypted.length);
+            combined.set(salt, 0);
+            combined.set(encrypted, salt.length);
+            
+            let binary = '';
+            for (let i = 0; i < combined.length; i++) {
+                binary += String.fromCharCode(combined[i]);
+            }
+            
+            const base64 = btoa(binary);
+            return 'P2.' + base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
+        function decodeProgress(code) {
+            try {
+                if (!code.startsWith('P2.')) return null;
+                
+                let base64 = code.substring(3);
+                base64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+                while (base64.length % 4) base64 += '=';
+                
+                const binary = atob(base64);
+                const combined = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) {
+                    combined[i] = binary.charCodeAt(i);
+                }
+                
+                const salt = combined.slice(0, 4);
+                const encrypted = combined.slice(4);
+                const decrypted = xorEncrypt(encrypted, salt);
+                
+                const newProgress = {};
+                const totalQuestions = Object.keys(questionIdMap).length;
+                
+                for (let i = 0; i < totalQuestions; i++) {
+                    const byteIndex = Math.floor(i / 4);
+                    const bitOffset = (i % 4) * 2;
+                    
+                    if (byteIndex < decrypted.length) {
+                        const mapped = (decrypted[byteIndex] >> bitOffset) & 3;
+                        const status = mapped === 1 ? -1 : mapped === 2 ? 1 : mapped === 3 ? 2 : 0;
+                        if (status !== 0) newProgress[i] = status;
+                    }
+                }
+                
+                return newProgress;
+            } catch (e) {
+                console.error('Failed to decode progress:', e);
+                return null;
+            }
+        }
+
+        function loadProgressCode() {
+            const input = document.getElementById('progressCodeInput');
+            const code = input.value.trim();
+            if (!code) return;
+            
+            const decoded = decodeProgress(code);
+            if (decoded) {
+                progressData = decoded;
+                alert('Progress loaded successfully!');
+                input.value = '';
+            } else {
+                alert('Invalid progress code. Please check and try again.');
+            }
+        }
+
+        function copyProgressCode() {
+            const code = document.getElementById('progressCodeDisplay').textContent;
+            navigator.clipboard.writeText(code).then(() => alert('Copied to clipboard!'));
+        }
+
+        function downloadProgressCode() {
+            const code = document.getElementById('progressCodeDisplay').textContent;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'quiz-progress.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // --- APP STATE ---
+        let selectedCategories = [];
+        let quizQuestions = [];
+        let lastQuizQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+        let currentUtterance = null;
+        let questionAnswered = false;
+        let lastAIRequestTime = 0;
+        const AI_COOLDOWN_MS = 10000;
+
+        // --- INITIALIZATION ---
+        function initCategories() {
+            initialiseQuestionIds();
+            const grid = document.getElementById('categoryGrid');
+            grid.innerHTML = '';
+            
+            Object.keys(quizData).forEach(category => {
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.textContent = category;
+                card.onclick = () => toggleCategory(category, card);
+                grid.appendChild(card);
+            });
+            document.getElementById('nextToSettingsBtn').disabled = true;
+        }
+
+        function toggleCategory(category, card) {
+            const index = selectedCategories.indexOf(category);
+            if (index > -1) {
+                selectedCategories.splice(index, 1);
+                card.classList.remove('selected');
+            } else {
+                selectedCategories.push(category);
+                card.classList.add('selected');
+            }
+            document.getElementById('nextToSettingsBtn').disabled = selectedCategories.length === 0;
+        }
+
+        function showSection(sectionId) {
+            closeOverallPerformance();
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function startQuiz() {
+            const qCountPerCategory = parseInt(document.getElementById('questionsPerCategory').value);
+            const qOrder = document.getElementById('questionOrder').value;
+            const qFilter = document.getElementById('questionFilter').value;
+
+            quizQuestions = [];
+            selectedCategories.forEach(category => {
+                let availableQuestions = quizData[category];
+                if (qFilter !== 'all') {
+                    availableQuestions = availableQuestions.filter(q => {
+                        const status = progressData[q.id] || 0;
+                        if (qFilter === 'unanswered') return status === 0;
+                        if (qFilter === 'incorrect') return status === -1;
+                        if (qFilter === 'review') return status === 0 || status === -1;
+                        return true;
+                    });
+                }
+                const shuffled = availableQuestions.sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, Math.min(qCountPerCategory, availableQuestions.length));
+                selected.forEach(q => quizQuestions.push({ ...q, category: category }));
+            });
+
+            if (qOrder === 'random') quizQuestions.sort(() => 0.5 - Math.random());
+            if (quizQuestions.length === 0) {
+                alert('No questions match your filter criteria.');
+                return;
+            }
+
+            lastQuizQuestions = JSON.parse(JSON.stringify(quizQuestions));
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            document.getElementById('wrongAnswersContainer').style.display = 'none';
+            displayQuestion();
+            showSection('quizSection');
+        }
+
+        function displayQuestion() {
+            const question = quizQuestions[currentQuestionIndex];
+            if (!question) {
+                showResults();
+                return;
+            }
+
+            document.getElementById('nextQuestionBtn').disabled = true;
+            questionAnswered = false;
+            
+            const tipButton = document.getElementById('tipButton');
+            tipButton.textContent = '💡 Tip';
+            tipButton.onclick = showAITip;
+            tipButton.disabled = false;
+
+            document.getElementById('categoryLabel').textContent = `Category: ${question.category}`;
+            document.getElementById('questionText').textContent = question.question;
+            document.getElementById('quizStatus').textContent = `Question ${currentQuestionIndex + 1} of ${quizQuestions.length}`;
+
+            const optionsGrid = document.getElementById('optionsGrid');
+            optionsGrid.innerHTML = '';
+            
+            const shuffledAnswers = question.answers.map((answer, index) => ({ text: answer, originalIndex: index }));
+            shuffledAnswers.sort(() => 0.5 - Math.random());
+            
+            shuffledAnswers.forEach((answer) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'answer-option';
+                optionDiv.textContent = answer.text;
+                optionDiv.onclick = (e) => selectAnswer(answer.originalIndex, optionDiv);
+                optionsGrid.appendChild(optionDiv);
+            });
+        }
+
+        function selectAnswer(selectedIndex, selectedDiv) {
+            if (questionAnswered) return;
+            
+            document.querySelectorAll('#optionsGrid .answer-option').forEach(opt => {
+                opt.classList.add('disabled');
+                opt.style.pointerEvents = 'none';
+            });
+
+            document.getElementById('nextQuestionBtn').disabled = false;
+            questionAnswered = true;
+            
+            const tipButton = document.getElementById('tipButton');
+            tipButton.textContent = '📖 Explain This';
+            tipButton.onclick = showAIExplanation;
+            tipButton.disabled = false;
+
+            const question = quizQuestions[currentQuestionIndex];
+            const isCorrect = selectedIndex === question.correctAnswer;
+            
+            selectedDiv.classList.add(isCorrect ? 'correct' : 'incorrect');
+            if (!isCorrect) {
+                // Highlight correct answer
+                const correctOption = Array.from(document.querySelectorAll('#optionsGrid .answer-option'))
+                    .find(div => div.textContent === question.answers[question.correctAnswer]);
+                if (correctOption) correctOption.classList.add('correct');
+            }
+
+            if (isCorrect) score++;
+            updateQuestionProgress(question.id, isCorrect);
+
+            userAnswers.push({
+                question: question.question,
+                category: question.category,
+                answers: question.answers,
+                userAnswer: selectedIndex,
+                correctAnswer: question.correctAnswer,
+                isCorrect: isCorrect
+            });
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        function showResults() {
+            showSection('resultsSection');
+            const totalQuestions = quizQuestions.length;
+            document.getElementById('finalScore').textContent = `${score}/${totalQuestions}`;
+            document.getElementById('finalPercentage').textContent = `${Math.round((score / totalQuestions) * 100)}%`;
+            document.getElementById('progressCodeDisplay').textContent = encodeProgress();
+
+            const categoryStats = {};
+            userAnswers.forEach(answer => {
+                if (!categoryStats[answer.category]) categoryStats[answer.category] = { correct: 0, total: 0 };
+                categoryStats[answer.category].total++;
+                if (answer.isCorrect) categoryStats[answer.category].correct++;
+            });
+
+            createPerformanceChart(categoryStats);
+            generateAIFeedback(score, totalQuestions, categoryStats, userAnswers.filter(a => !a.isCorrect));
+        }
+
+        function createPerformanceChart(stats) {
+            const chart = document.getElementById('performanceChart');
+            chart.innerHTML = '';
+            for (const category in stats) {
+                const s = stats[category];
+                const percentage = s.total > 0 ? (s.correct / s.total) * 100 : 0;
+                let colorClass = 'bg-red';
+                if (percentage >= 75) colorClass = 'bg-green';
+                else if (percentage >= 50) colorClass = 'bg-blue';
+                else if (percentage > 25) colorClass = 'bg-yellow';
+
+                const group = document.createElement('div');
+                group.className = 'topic-bar-group';
+                group.innerHTML = `
+                    <div class="topic-label">${category}</div>
+                    <div class="chart-bar">
+                        <div class="bar-fill ${colorClass}" style="width: ${percentage}%"></div>
+                        <span class="chart-percentage">${Math.round(percentage)}% (${s.correct}/${s.total})</span>
+                    </div>
+                `;
+                chart.appendChild(group);
+            }
+        }
+        
+        // --- SECURE AI FUNCTIONS ---
+        
+        async function fetchAIResponse(prompt, systemInstruction) {
+             try {
+                const response = await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: systemInstruction }] }
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Server returned ${response.status}`);
+                
+                const result = await response.json();
+                return result.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            } catch (error) {
+                console.error("AI Request Failed", error);
+                return null;
+            }
+        }
+
+        async function generateAIFeedback(score, total, categoryStats, wrongAnswers) {
+            const feedbackBox = document.getElementById('aiFeedback');
+            const readFeedbackBtn = document.getElementById('readFeedbackBtn');
+            readFeedbackBtn.disabled = true;
+            feedbackBox.innerHTML = '<div class="loading-spinner"></div><div style="margin-top: 15px;">Generating personalised feedback...</div>';
+
+            let prompt = `You are a helpful and encouraging computer science teacher. A student just completed a quiz.\n`;
+            prompt += `Score: ${score}/${total} (${Math.round((score/total)*100)}%)\n\nPerformance by category:\n`;
+            for (let c in categoryStats) {
+                prompt += `- ${c}: ${categoryStats[c].correct}/${categoryStats[c].total}\n`;
+            }
+            if (wrongAnswers.length > 0) {
+                prompt += `\nQuestions answered incorrectly:\n`;
+                wrongAnswers.forEach((ans, i) => {
+                    prompt += `${i+1}. Q: ${ans.question} | Student said: "${ans.answers[ans.userAnswer]}" | Correct: "${ans.answers[ans.correctAnswer]}"\n`;
+                });
+            }
+            prompt += `\nProvide concise, positive feedback using UK spellings. Identify weak areas and give 1 actionable study tip. Use Markdown for formatting.`;
+
+            const feedback = await fetchAIResponse(prompt, "You are a supportive teacher.");
+            
+            if (feedback) {
+                // Parse markdown if marked library is available, otherwise plain text
+                feedbackBox.innerHTML = typeof marked !== 'undefined' ? marked.parse(feedback) : feedback;
+                readFeedbackBtn.disabled = false;
+            } else {
+                feedbackBox.innerHTML = "Unable to generate feedback at this time. Great effort!";
+            }
+        }
+
+        async function showAITip() {
+            const modal = document.getElementById('aiHelpModal');
+            const header = document.getElementById('aiHelpHeader');
+            const body = document.getElementById('aiHelpBody');
+            
+            header.textContent = '💡 Hint';
+            
+            const now = Date.now();
+            if (now - lastAIRequestTime < AI_COOLDOWN_MS) {
+                const remaining = Math.ceil((AI_COOLDOWN_MS - (now - lastAIRequestTime)) / 1000);
+                body.innerHTML = `Please wait ${remaining} seconds before asking for another hint.`;
+                modal.classList.add('show');
+                return;
+            }
+            lastAIRequestTime = now;
+
+            const question = quizQuestions[currentQuestionIndex];
+            body.innerHTML = '<div class="loading-spinner"></div><div style="margin-top: 15px; text-align: center;">Generating hint...</div>';
+            modal.classList.add('show');
+            
+            const prompt = `Give a brief hint (2-3 sentences) for this question WITHOUT revealing the answer. Use UK spellings.\nQuestion: ${question.question}\nOptions: ${question.answers.join(', ')}`;
+            
+            const hint = await fetchAIResponse(prompt, "You are a helpful tutor. Do not reveal the answer.");
+            
+            if (hint) {
+                body.innerHTML = typeof marked !== 'undefined' ? marked.parse(hint) : hint;
+            } else {
+                body.innerHTML = "Sorry, I couldn't generate a hint right now.";
+            }
+        }
+
+        async function showAIExplanation() {
+            const modal = document.getElementById('aiHelpModal');
+            const header = document.getElementById('aiHelpHeader');
+            const body = document.getElementById('aiHelpBody');
+            header.textContent = '📖 Explanation';
+
+            const now = Date.now();
+            if (now - lastAIRequestTime < AI_COOLDOWN_MS) {
+                const remaining = Math.ceil((AI_COOLDOWN_MS - (now - lastAIRequestTime)) / 1000);
+                body.innerHTML = `Please wait ${remaining} seconds before asking for another explanation.`;
+                modal.classList.add('show');
+                return;
+            }
+            lastAIRequestTime = now;
+
+            const answer = userAnswers[userAnswers.length - 1];
+            body.innerHTML = '<div class="loading-spinner"></div><div style="margin-top: 15px; text-align: center;">Generating explanation...</div>';
+            modal.classList.add('show');
+            
+            const prompt = `Explain why the correct answer is right and the user's answer (if different) was wrong. Be concise. Question: ${answer.question}\nCorrect: ${answer.answers[answer.correctAnswer]}\nUser: ${answer.answers[answer.userAnswer]}`;
+            
+            const explanation = await fetchAIResponse(prompt, "You are a helpful tutor.");
+            
+            if (explanation) {
+                body.innerHTML = typeof marked !== 'undefined' ? marked.parse(explanation) : explanation;
+            } else {
+                body.innerHTML = "Sorry, I couldn't generate an explanation right now.";
+            }
+        }
+
+        function closeAIHelpModal(event) {
+            const modal = document.getElementById('aiHelpModal');
+            if (!event || event.target === modal || event.target.classList.contains('ai-help-close')) {
+                modal.classList.remove('show');
+            }
+        }
+
+        function showWrongAnswers() {
+            const container = document.getElementById('wrongAnswersContainer');
+            const list = document.getElementById('wrongAnswersList');
+            list.innerHTML = '';
+            
+            const wrongAnswers = userAnswers.filter(a => !a.isCorrect);
+            if (wrongAnswers.length === 0) {
+                list.innerHTML = '<p style="color: #4CAF50; font-weight: 600;">Perfect score! No incorrect answers.</p>';
+            } else {
+                wrongAnswers.forEach((ans, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'wrong-answer-item';
+                    item.innerHTML = `
+                        <div class="wrong-answer-question">${index + 1}. ${ans.question}</div>
+                        <div class="wrong-answer-detail your-answer">Your answer: ${ans.answers[ans.userAnswer]}</div>
+                        <div class="wrong-answer-detail correct-answer">Correct answer: ${ans.answers[ans.correctAnswer]}</div>
+                    `;
+                    list.appendChild(item);
+                });
+            }
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleReadFeedback() {
+            const feedbackBox = document.getElementById('aiFeedback');
+            const iconSpan = document.getElementById('ttsIcon');
+            
+            if (currentUtterance && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                iconSpan.textContent = '🔊 Read Aloud';
+                currentUtterance = null;
+            } else {
+                const text = feedbackBox.innerText; // Use innerText to skip HTML tags
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.rate = 1.0;
+                currentUtterance.onend = () => {
+                    iconSpan.textContent = '🔊 Read Aloud';
+                    currentUtterance = null;
+                };
+                iconSpan.textContent = '🔇 Stop';
+                window.speechSynthesis.speak(currentUtterance);
+            }
+        }
+
+        function showOverallPerformance() {
+            if (Object.keys(questionIdMap).length === 0) initialiseQuestionIds();
+            closeOverallPerformance();
+            
+            let html = '<div style="margin-bottom: 20px;">';
+            html += '<div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">';
+            html += '<div style="display: flex; align-items: center; gap: 8px;"><div style="width: 20px; height: 20px; background: #ddd; border-radius: 3px;"></div><span>Not Attempted</span></div>';
+            html += '<div style="display: flex; align-items: center; gap: 8px;"><div style="width: 20px; height: 20px; background: #F44336; border-radius: 3px;"></div><span>Incorrect</span></div>';
+            html += '<div style="display: flex; align-items: center; gap: 8px;"><div style="width: 20px; height: 20px; background: #8BC34A; border-radius: 3px;"></div><span>Correct Once</span></div>';
+            html += '<div style="display: flex; align-items: center; gap: 8px;"><div style="width: 20px; height: 20px; background: #4CAF50; border-radius: 3px;"></div><span>Correct 2+ Times</span></div>';
+            html += '</div></div>';
+            
+            for (const category in quizData) {
+                const questions = quizData[category];
+                html += `<div style="margin-bottom: 30px;">`;
+                html += `<h3 style="color: #667eea; margin-bottom: 15px;">${category}</h3>`;
+                html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(25px, 1fr)); gap: 5px;">`;
+                
+                questions.forEach((q) => {
+                    if (q.id === undefined) return;
+                    const status = progressData[q.id] || 0;
+                    let bgColor = '#ddd';
+                    let title = 'Not attempted';
+                    if (status === -1) { bgColor = '#F44336'; title = 'Incorrect'; }
+                    else if (status === 1) { bgColor = '#8BC34A'; title = 'Correct Once'; }
+                    else if (status === 2) { bgColor = '#4CAF50'; title = 'Mastered'; }
+                    html += `<div style="width: 25px; height: 25px; background: ${bgColor}; border-radius: 3px;" title="${title}"></div>`;
+                });
+                html += `</div></div>`;
+            }
+            
+            const modalDiv = document.createElement('div');
+            modalDiv.id = 'overallPerformanceModal';
+            modalDiv.className = 'show'; // Uses class for display
+            modalDiv.innerHTML = `
+                <div style="max-width: 900px; margin: 50px auto; background: white; border-radius: 15px; padding: 40px; position: relative;">
+                    <button onclick="closeOverallPerformance()" style="position: absolute; top: 20px; right: 20px; background: #ccc; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 20px; cursor: pointer;">×</button>
+                    <h2 style="margin-bottom: 30px; color: #667eea;">Overall Performance Map</h2>
+                    <div>${html}</div>
+                </div>
+            `;
+            modalDiv.onclick = (e) => { if (e.target === modalDiv) closeOverallPerformance(); };
+            document.body.appendChild(modalDiv);
+        }
+
+        function closeOverallPerformance() {
+            const modal = document.getElementById('overallPerformanceModal');
+            if (modal) modal.remove();
+        }
+
+        function repeatQuiz() {
+            quizQuestions = JSON.parse(JSON.stringify(lastQuizQuestions));
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            document.getElementById('wrongAnswersContainer').style.display = 'none';
+            displayQuestion();
+            showSection('quizSection');
+        }
+
+        function restart() {
+            selectedCategories = [];
+            quizQuestions = [];
+            lastQuizQuestions = [];
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            initCategories();
+            showSection('categorySection');
+        }
+    </script>
+</body>
+</html>
