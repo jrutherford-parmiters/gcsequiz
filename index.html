@@ -4156,10 +4156,9 @@
             }
 
             prompt += `\nProvide personalised feedback. Use Markdown for formatting and UK spelling. Being increasingly positive with scores over 60%, but increasingly concerned with scores below 60%. Use English spellings throughout (not American spellings). Include:\n`;
-            prompt += `1. Briefly Congratulate them on what they did well (e.g., strong category performance) in no more than two sentences. Show increasing levels of concern as scores drop below 60%, indicating a need to improve understanding and performance.\n`;
             prompt += `2. Tell them what grade they are working at (>93% = grade 9, >89% = grade 8, >79% = grade 7, >71% = grade 6, >61% = grade 5, >51% = grade 4, >39% = grade 3, >31% = grade 2, >24% = grade 1) but point out that the exam will of course not just contain multiple choice questions.\n`;
-            prompt += `3. Identify one or two things they got wrong, and explain why the correct answer was right.\n`;
-            prompt += `4. Give one concrete, actionable study suggestions for improvement. Also remind them to check out what is happening in Parmiter's Computer Science support session on Tuesday lunchtimes.\n`;
+            prompt += `2. Identify one or two things they got wrong, and concisely explain why the correct answer was right (in no more than three sentences).\n`;
+            prompt += `3. Give one concrete, actionable study suggestions for improvement. Also remind them to check out what is happening in Parmiter's Computer Science support session on Tuesday lunchtimes.\n`;
             
             const feedback = await fetchAIResponse(prompt, "You are a supportive teacher.");
             
@@ -4358,3 +4357,4 @@
     </script>
 </body>
 </html>
+
