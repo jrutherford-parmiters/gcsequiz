@@ -10,7 +10,7 @@ module.exports = async (request, response) => {
     
     // --- 1. CONFIGURATION: Define the Single Working Model ---
     // Using the stable model that resolved the previous 404 errors.
-    const WORKING_MODEL = 'gemini-2.5-flash'; 
+    const WORKING_MODEL = 'gemini-2.5-flash-lite'; 
     
     // Define the list of API Keys to cycle through
     // IMPORTANT: These names (GEMINI_API_KEY_1, etc.) must be set in Vercel's Environment Variables.
@@ -80,5 +80,6 @@ module.exports = async (request, response) => {
         message: `All ${CREDENTIALS.length} supplied API keys failed to return a valid response.`
     });
 };
+
 
 
