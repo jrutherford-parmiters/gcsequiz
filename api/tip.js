@@ -1,3 +1,12 @@
+// Function to implement the Fisher-Yates shuffle algorithm.
+// This is done outside the main handler to avoid recreating the function on every request.
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
 module.exports = async (request, response) => {
     // CORS Handling (allows your HTML page to talk to this endpoint)
     response.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,8 +18,8 @@ module.exports = async (request, response) => {
     }
     
     // --- 1. CONFIGURATION: Define the Single Working Model ---
-    // Using the stable model that resolved the previous 404 errors.
-    const WORKING_MODEL = 'gemini-2.5-flash-lite'; 
+    // Using the stable model for high throughput and low cost.
+    const WORKING_MODEL = 'gemini-2.5-flash-lite';
     
     // Define the list of API Keys to cycle through
     // IMPORTANT: These names (GEMINI_API_KEY_1, etc.) must be set in Vercel's Environment Variables.
@@ -28,6 +37,9 @@ module.exports = async (request, response) => {
         return response.status(500).json({ error: 'Server configuration error: No API Keys provided.' });
     }
 
+    // NEW LOGIC: Shuffle the keys to distribute load and maximize aggregate RPM/RPD capacity.
+    shuffleArray(CREDENTIALS);
+
     // Body Parsing (Ensures the request body is ready for the API call)
     let requestBody;
     try {
@@ -43,6 +55,7 @@ module.exports = async (request, response) => {
     }
 
     // --- 2. FAILOVER LOGIC: Loop through all keys until one succeeds ---
+    // The loop attempts keys in a random order.
     for (const { key, model } of CREDENTIALS) {
         // Construct the URL using the current key and the proven model
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
@@ -80,6 +93,4 @@ module.exports = async (request, response) => {
         message: `All ${CREDENTIALS.length} supplied API keys failed to return a valid response.`
     });
 };
-
-
 
